@@ -69,4 +69,33 @@ int encrypt_file(const char* input_file, const char* output_file) {
     }
 
     // Encrypt the input file and write to the output file
-    while ((bytes_read = fread(in
+    while ((bytes_read = fread(in    buf, 1, AES_BLOCK_SIZE, in_file)) > 0) {
+        AES_cbc_encrypt(in_buf, out_buf, bytes_read, &key, iv, AES_ENCRYPT);
+        if (fwrite(out_buf, 1, bytes_read, out_file) != bytes_read) {
+            fprintf(stderr, "Could not write to output file\n");
+            fclose(in_file);
+            fclose(out_file);
+            free(key_data);
+            return 1;
+        }
+    }
+
+    // Close the input and output files
+    fclose(in_file);
+    fclose(out_file);
+
+    // Clean up
+    free(key_data);
+
+    return 0;
+}
+
+int main(int argc, char** argv) {
+    if (argc < 3) {
+        printf("Usage: %s input_file output_file\n", argv[0]);
+        return 1;
+    }
+
+    return encrypt_file(argv[1], argv[2]);
+}
+
